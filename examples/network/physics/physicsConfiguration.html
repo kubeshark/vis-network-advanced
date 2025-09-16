@@ -21,6 +21,11 @@
       }
     </style>
 
+    <script type="module">
+      import { loadForceAtlasWasm } from '../../../wasm/forceatlas/wasm-loader.js';
+      await loadForceAtlasWasm(); // ensures window.compute_forces is available
+    </script>
+
     <script
       type="text/javascript"
       src="../../../standalone/umd/vis-network-advanced.min.js"
@@ -33,6 +38,8 @@
     <script type="text/javascript" src="../exampleUtil.js"></script>
 
     <script type="text/javascript">
+      const nodeCount = 5000;
+
       var nodes = null;
       var edges = null;
       var network = null;
@@ -41,16 +48,26 @@
         nodes = [];
         edges = [];
         // randomly create some nodes and edges
-        var data = getScaleFreeNetwork(60);
+        var data = getScaleFreeNetwork(nodeCount);
 
         // create a network
         var container = document.getElementById("mynetwork");
 
         var options = {
           physics: {
+            maxVelocity: 150,
+            solver: "forceAtlas2Based",
+            forceAtlas2Based: {
+              gravitationalConstant: -283,
+              springLength: 100,
+              useWasm: false,
+            },
             stabilization: false,
             wind: { x: 0, y: 0 },
           },
+          // layout: {
+          //   improvedLayout: false,
+          // },
           configure: {
             filter: function (option, path) {
               if (path.indexOf("physics") !== -1) {
@@ -71,15 +88,6 @@
 
   <body onload="draw();">
     <h2>Playing with Physics</h2>
-    <div style="width: 700px; font-size: 14px; text-align: justify">
-      Every dataset is different. Nodes can have different sizes based on
-      content, interconnectivity can be high or low etc. Because of this, the
-      network configurator can be used to explore which settings may be good for
-      him or her. This is ment to be used during the development phase when you
-      are implementing vis.js. Once you have found settings you are happy with,
-      you can supply them to network using the documented physics options.
-    </div>
-    <br />
     <div id="mynetwork"></div>
     <div id="config"></div>
 

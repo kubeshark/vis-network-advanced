@@ -100,6 +100,15 @@ Then, the project can be build running:
 
     $ npm run build
 
+### WASM prototype
+
+A wasm prototype for a ForceAtlas2 solver is included at `wasm/forceatlas`.
+Build it with `wasm-pack` from that directory and serve the produced `pkg` files.
+Use `wasm/forceatlas/wasm-loader.js` to load the module; it will expose
+`window.forceatlas_compute_forces`. To enable wasm for ForceAtlas2 at runtime,
+set `physics.forceAtlas2Based.useWasm = true` in the network options and ensure
+the wasm loader has been called before starting the physics.
+
 ## Test
 
 To test the library, install the project dependencies once:

@@ -53,7 +53,13 @@
 
         var options = {
           physics: {
+            solver: "forceAtlas2Based",
+            forceAtlas2Based: {
+              springLength: 100,
+              useWasm: false,
+            },
             stabilization: false,
+            wind: { x: 0, y: 0 },
           },
           configure: true,
         };

@@ -488,6 +488,7 @@ const allOptions: OptionsConfig = {
       springConstant: { number },
       damping: { number },
       avoidOverlap: { number },
+      useWasm: { boolean: bool },
       __type__: { object },
     },
     repulsion: {
@@ -793,6 +794,7 @@ const configureOptions: ConfiguratorConfig = {
       springConstant: [0.08, 0, 1.2, 0.005],
       damping: [0.4, 0, 1, 0.01],
       avoidOverlap: [0, 0, 1, 0.01],
+      useWasm: false,
     },
     repulsion: {
       centralGravity: [0.2, 0, 10, 0.05],
