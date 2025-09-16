@@ -1,0 +1,15 @@
+{
+  "name": "forceatlas_wasm",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "forceatlas_wasm_bg.wasm",
+    "forceatlas_wasm.js",
+    "forceatlas_wasm.d.ts"
+  ],
+  "main": "forceatlas_wasm.js",
+  "types": "forceatlas_wasm.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
