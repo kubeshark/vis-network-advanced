@@ -181,7 +181,8 @@
     "./dist/vis-network-advanced.esm.min.js": {
       "import": "./dist/vis-network-advanced.min.mjs",
       "require": "./dist/vis-network-advanced.min.cjs"
-    }
+    },
+    "./wasm/*": "./wasm/*"
   },
   "files": [
     "HISTORY.md",
