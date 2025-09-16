@@ -1,6 +1,6 @@
 {
   "name": "vis-network-advanced",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A dynamic, browser-based visualization library. Advanced functionality. Enhanced by WebAssembly.",
   "homepage": "https://visjs.github.io/vis-network-advanced/",
   "license": "(Apache-2.0 OR MIT)",
