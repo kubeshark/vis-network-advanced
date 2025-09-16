@@ -191,7 +191,8 @@
     "esnext",
     "peer",
     "standalone",
-    "styles"
+    "styles",
+    "wasm"
   ],
   "funding": {
     "type": "opencollective",
