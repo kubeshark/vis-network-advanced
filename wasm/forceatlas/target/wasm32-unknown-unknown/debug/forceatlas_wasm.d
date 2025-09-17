@@ -1,0 +1,1 @@
+/Users/tiptophelmet/WebstormProjects/vis-network-advanced/wasm/forceatlas/target/wasm32-unknown-unknown/debug/forceatlas_wasm.wasm: /Users/tiptophelmet/WebstormProjects/vis-network-advanced/wasm/forceatlas/src/lib.rs

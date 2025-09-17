@@ -32,6 +32,31 @@ export function compute_forces(positions, masses, theta, gravitational, avoid_ov
     return ret;
 }
 
+/**
+ * @param {Float64Array} positions
+ * @param {Float64Array} from_idx
+ * @param {Float64Array} to_idx
+ * @param {Float64Array} lengths
+ * @param {number} spring_constant
+ * @returns {Float64Array}
+ */
+export function compute_springs(positions, from_idx, to_idx, lengths, spring_constant) {
+    const ret = wasm.compute_springs(positions, from_idx, to_idx, lengths, spring_constant);
+    return ret;
+}
+
+/**
+ * @param {Float64Array} positions
+ * @param {Float64Array} masses
+ * @param {number} central_gravity
+ * @param {Float64Array} degrees
+ * @returns {Float64Array}
+ */
+export function compute_central_gravity(positions, masses, central_gravity, degrees) {
+    const ret = wasm.compute_central_gravity(positions, masses, central_gravity, degrees);
+    return ret;
+}
+
 async function __wbg_load(module, imports) {
     if (typeof Response === 'function' && module instanceof Response) {
         if (typeof WebAssembly.instantiateStreaming === 'function') {

@@ -4,8 +4,8 @@
  *
  * A dynamic, browser-based visualization library. Advanced functionality. Enhanced by WebAssembly.
  *
- * @version 0.1.0
- * @date    2025-09-16T12:49:03.040Z
+ * @version 0.1.3
+ * @date    2025-09-17T16:19:58.221Z
  *
  * @copyright (c) 2011-2017 Almende B.V, http://almende.com
  * @copyright (c) 2017-2019 visjs contributors, https://github.com/visjs
@@ -29223,6 +29223,81 @@
               }
             }
           };
+          // thin adapter for edge springs using wasm helper if available
+          if (window.forceatlas_compute_springs) {
+            this.edgesSolver = {
+              solve: () => {
+                const edgeIndices = this.physicsBody.physicsEdgeIndices;
+                const edges = this.body.edges;
+                const nodeIndices = this.physicsBody.physicsNodeIndices;
+                const nodes = this.body.nodes;
+
+                // map node id to compact position array index
+                const indexMap = {};
+                for (let i = 0; i < nodeIndices.length; i++) {
+                  indexMap[nodeIndices[i]] = i;
+                }
+                const n = nodeIndices.length;
+                if (n === 0) return;
+                const positions = new Float64Array(n * 2);
+                for (let i = 0; i < n; i++) {
+                  const node = nodes[nodeIndices[i]];
+                  positions[2 * i] = node.x;
+                  positions[2 * i + 1] = node.y;
+                }
+                const fromIdx = new Float64Array(edgeIndices.length);
+                const toIdx = new Float64Array(edgeIndices.length);
+                const lengths = new Float64Array(edgeIndices.length);
+                for (let i = 0; i < edgeIndices.length; i++) {
+                  const edge = edges[edgeIndices[i]];
+                  fromIdx[i] = indexMap[edge.fromId] !== undefined ? indexMap[edge.fromId] : -1;
+                  toIdx[i] = indexMap[edge.toId] !== undefined ? indexMap[edge.toId] : -1;
+                  lengths[i] = edge.options.length === undefined ? this.modelOptions.springLength : edge.options.length;
+                }
+                const wasmSprings = window.forceatlas_compute_springs(positions, fromIdx, toIdx, lengths, this.modelOptions.springConstant || 0);
+
+                // apply forces back to physicsBody.forces using original node ids
+                for (let i = 0; i < n; i++) {
+                  const id = nodeIndices[i];
+                  this.physicsBody.forces[id].x += wasmSprings[2 * i];
+                  this.physicsBody.forces[id].y += wasmSprings[2 * i + 1];
+                }
+              }
+            };
+          } else {
+            // fallback to JS spring solver
+            this.edgesSolver = new SpringSolver(this.body, this.physicsBody, options);
+          }
+
+          // thin adapter for central gravity using wasm helper if available
+          if (window.forceatlas_compute_central_gravity) {
+            this.gravitySolver = {
+              solve: () => {
+                const nodeIndices = this.physicsBody.physicsNodeIndices;
+                const nodes = this.body.nodes;
+                const n = nodeIndices.length;
+                if (n === 0) return;
+                const positions = new Float64Array(n * 2);
+                const masses = new Float64Array(n);
+                const degrees = new Float64Array(n);
+                for (let i = 0; i < n; i++) {
+                  const node = nodes[nodeIndices[i]];
+                  positions[2 * i] = node.x;
+                  positions[2 * i + 1] = node.y;
+                  masses[i] = node.options.mass || 1;
+                  degrees[i] = node.edges && node.edges.length ? node.edges.length + 1 : 1;
+                }
+                const wasmGravity = window.forceatlas_compute_central_gravity(positions, masses, this.modelOptions.centralGravity || 0, degrees);
+                for (let i = 0; i < n; i++) {
+                  const id = nodeIndices[i];
+                  this.physicsBody.forces[id].x += wasmGravity[2 * i];
+                  this.physicsBody.forces[id].y += wasmGravity[2 * i + 1];
+                }
+              }
+            };
+          } else {
+            this.gravitySolver = new ForceAtlas2BasedCentralGravitySolver(this.body, this.physicsBody, options);
+          }
         } else {
           this.nodesSolver = new ForceAtlas2BasedRepulsionSolver(this.body, this.physicsBody, options);
         }

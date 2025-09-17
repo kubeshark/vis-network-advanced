@@ -262,3 +262,104 @@ pub fn compute_forces(
     out.copy_from(&forces[..]);
     out
 }
+
+// Compute spring (edge) forces in Rust and return a Float64Array of per-node forces [fx,fy,...]
+#[wasm_bindgen]
+pub fn compute_springs(
+    positions: &Float64Array,
+    from_idx: &Float64Array,
+    to_idx: &Float64Array,
+    lengths: &Float64Array,
+    spring_constant: f64,
+) -> Float64Array {
+    let n = (positions.length() / 2) as usize;
+
+    // copy positions
+    let mut pos = vec![0.0f64; n * 2];
+    positions.copy_to(&mut pos[..]);
+
+    let m = from_idx.length() as usize;
+    let mut from = vec![0.0f64; m];
+    from_idx.copy_to(&mut from[..]);
+    let mut to = vec![0.0f64; m];
+    to_idx.copy_to(&mut to[..]);
+
+    let mut lens = vec![0.0f64; m];
+    if lengths.length() as usize >= m {
+        lengths.copy_to(&mut lens[..]);
+    }
+
+    let mut forces = vec![0.0f64; n * 2];
+
+    for i in 0..m {
+        let fi_f = from[i];
+        let ti_f = to[i];
+        // allow -1 or invalid indices; ignore those
+        let fi = if fi_f.is_finite() { fi_f as isize } else { -1 };
+        let ti = if ti_f.is_finite() { ti_f as isize } else { -1 };
+        if fi < 0 || ti < 0 { continue; }
+        let fi_usize = fi as usize;
+        let ti_usize = ti as usize;
+        if fi_usize >= n || ti_usize >= n { continue; }
+
+        let fx = pos[2 * fi_usize] - pos[2 * ti_usize];
+        let fy = pos[2 * fi_usize + 1] - pos[2 * ti_usize + 1];
+        let mut distance = (fx * fx + fy * fy).sqrt();
+        if distance < 0.01 { distance = 0.01; }
+
+        let edge_length = if i < lens.len() { lens[i] } else { 0.0 };
+        let spring_force = (spring_constant * (edge_length - distance)) / distance;
+
+        let sx = fx * spring_force;
+        let sy = fy * spring_force;
+
+        forces[2 * fi_usize] += sx;
+        forces[2 * fi_usize + 1] += sy;
+
+        forces[2 * ti_usize] -= sx;
+        forces[2 * ti_usize + 1] -= sy;
+    }
+
+    let out = Float64Array::new_with_length((n * 2) as u32);
+    out.copy_from(&forces[..]);
+    out
+}
+
+// Compute central gravity per-node in Rust and return Float64Array [fx,fy,...]
+#[wasm_bindgen]
+pub fn compute_central_gravity(
+    positions: &Float64Array,
+    masses: &Float64Array,
+    central_gravity: f64,
+    degrees: &Float64Array,
+) -> Float64Array {
+    let n = (positions.length() / 2) as usize;
+
+    let mut pos = vec![0.0f64; n * 2];
+    positions.copy_to(&mut pos[..]);
+
+    let mut m = vec![1.0f64; n];
+    if masses.length() as usize >= n {
+        masses.copy_to(&mut m[..]);
+    }
+
+    let mut deg = vec![1.0f64; n];
+    if degrees.length() as usize >= n {
+        degrees.copy_to(&mut deg[..]);
+    }
+
+    let mut forces = vec![0.0f64; n * 2];
+    for i in 0..n {
+        let dx = -pos[2 * i];
+        let dy = -pos[2 * i + 1];
+        let degree = deg[i];
+        let mass = m[i];
+        let gravity_force = central_gravity * degree * mass;
+        forces[2 * i] = dx * gravity_force;
+        forces[2 * i + 1] = dy * gravity_force;
+    }
+
+    let out = Float64Array::new_with_length((n * 2) as u32);
+    out.copy_from(&forces[..]);
+    out
+}
